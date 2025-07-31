@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, updateDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import './ViewCompanies.css'; // 👈 CSS file
 
 const ViewCompanies = () => {
   const [companies, setCompanies] = useState([]);
@@ -12,8 +13,18 @@ const ViewCompanies = () => {
     setCompanies(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
+  const logAction = async (action, data) => {
+    await addDoc(collection(db, 'actions'), {
+      action,
+      data,
+      timestamp: Timestamp.now()
+    });
+  };
+
   const deleteCompany = async (id) => {
+    const companyToDelete = companies.find(c => c.id === id);
     await deleteDoc(doc(db, 'companies', id));
+    await logAction('deleted_company', companyToDelete);
     fetchCompanies();
   };
 
@@ -24,6 +35,7 @@ const ViewCompanies = () => {
 
   const saveEdit = async () => {
     await updateDoc(doc(db, 'companies', editId), editData);
+    await logAction('edited_company', { id: editId, ...editData });
     setEditId(null);
     fetchCompanies();
   };
@@ -33,24 +45,26 @@ const ViewCompanies = () => {
   }, []);
 
   return (
-    <div>
-      <h3>Company List</h3>
+    <div className="view-companies-container">
+      <h2>Company List</h2>
       {companies.map(company => (
-        <div key={company.id} style={{ border: '1px solid gray', margin: '10px', padding: '10px' }}>
+        <div key={company.id} className="company-card">
           {editId === company.id ? (
-            <div>
-              <input value={editData.name} onChange={e => setEditData({ ...editData, name: e.target.value })} />
-              <input value={editData.minCgpa} onChange={e => setEditData({ ...editData, minCgpa: e.target.value })} />
-              <input value={editData.maxArrears} onChange={e => setEditData({ ...editData, maxArrears: e.target.value })} />
-              <button onClick={saveEdit}>Save</button>
+            <div className="edit-form">
+              <input value={editData.name} onChange={e => setEditData({ ...editData, name: e.target.value })} placeholder="Company Name" />
+              <input value={editData.minCgpa} onChange={e => setEditData({ ...editData, minCgpa: e.target.value })} placeholder="Min CGPA" />
+              <input value={editData.maxArrears} onChange={e => setEditData({ ...editData, maxArrears: e.target.value })} placeholder="Max Arrears" />
+              <button className="save-btn" onClick={saveEdit}>Save</button>
             </div>
           ) : (
             <>
               <h4>{company.name}</h4>
               <p>Min CGPA: {company.minCgpa}</p>
               <p>Max Arrears: {company.maxArrears}</p>
-              <button onClick={() => deleteCompany(company.id)}>Delete</button>
-              <button onClick={() => startEdit(company)}>Edit</button>
+              <div className="btn-group">
+                <button className="delete-btn" onClick={() => deleteCompany(company.id)}>Delete</button>
+                <button className="edit-btn" onClick={() => startEdit(company)}>Edit</button>
+              </div>
             </>
           )}
         </div>

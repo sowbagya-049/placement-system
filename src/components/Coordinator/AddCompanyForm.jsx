@@ -1,20 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { collection, addDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  doc,
+  getDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { db, auth } from "../../firebase/config";
 import { onAuthStateChanged } from "firebase/auth";
-import './AddCompanyForm.css';
+import "./AddCompanyForm.css";
 
 const AddCompanyForm = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    minCgpa: '',
-    maxArrears: '',
+    name: "",
+    minCgpa: "",
+    maxArrears: "",
   });
 
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -22,10 +28,10 @@ const AddCompanyForm = () => {
       if (loggedInUser) {
         setUser(loggedInUser);
         try {
-          const roleRef = doc(db, "roles", loggedInUser.uid);
-          const roleSnap = await getDoc(roleRef);
-          if (roleSnap.exists()) {
-            setUserRole(roleSnap.data().role);
+          const userRef = doc(db, "users", loggedInUser.uid); // ✅ use 'users' collection
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            setUserRole(userSnap.data().role); // ✅ role from 'users'
           } else {
             setUserRole("none");
           }
@@ -44,12 +50,12 @@ const AddCompanyForm = () => {
   }, []);
 
   const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('');
+    setMessage("");
 
     if (!user || userRole !== "coordinator") {
       setMessage("❌ You must be logged in as a coordinator to add a company.");
@@ -66,7 +72,7 @@ const AddCompanyForm = () => {
 
     try {
       setSubmitting(true);
-      await addDoc(collection(db, 'companies'), {
+      await addDoc(collection(db, "companies"), {
         name: formData.name.trim(),
         minCgpa,
         maxArrears,
@@ -75,7 +81,7 @@ const AddCompanyForm = () => {
       });
 
       setMessage("✅ Company added successfully!");
-      setFormData({ name: '', minCgpa: '', maxArrears: '' });
+      setFormData({ name: "", minCgpa: "", maxArrears: "" });
     } catch (err) {
       console.error("Error adding company:", err);
       setMessage("❌ Failed to add company. Check the console.");
@@ -118,7 +124,11 @@ const AddCompanyForm = () => {
       />
 
       {message && (
-        <p className={`form-message ${message.includes("❌") ? "error" : "success"}`}>
+        <p
+          className={`form-message ${
+            message.includes("❌") ? "error" : "success"
+          }`}
+        >
           {message}
         </p>
       )}
@@ -128,7 +138,9 @@ const AddCompanyForm = () => {
       </button>
 
       {userRole !== "coordinator" && (
-        <p className="form-message error">❌ Only coordinators can access this form.</p>
+        <p className="form-message error">
+          ❌ Only coordinators can access this form.
+        </p>
       )}
     </form>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../../firebase/config';
 import './StudentProfileForm.css';
 
@@ -18,15 +19,30 @@ const StudentProfileForm = ({ onComplete }) => {
     arrears: ''
   });
 
-  const user = auth.currentUser;
+  const [user, setUser] = useState(null);
 
+  // Track login state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(firebaseUser);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Check if profile already exists
   useEffect(() => {
     const checkProfile = async () => {
-      const profileRef = doc(db, 'profiles', user?.uid);
-      const profileSnap = await getDoc(profileRef);
-      if (profileSnap.exists()) onComplete();
+      if (user) {
+        const profileRef = doc(db, 'profiles', user.uid);
+        const profileSnap = await getDoc(profileRef);
+        if (profileSnap.exists()) {
+          onComplete(); // Skip form if profile exists
+        }
+      }
     };
-    if (user) checkProfile();
+    checkProfile();
   }, [user, onComplete]);
 
   const handleChange = (e) => {
@@ -35,8 +51,15 @@ const StudentProfileForm = ({ onComplete }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await setDoc(doc(db, 'profiles', user.uid), formData);
-    onComplete();
+    if (!user) return;
+    try {
+      await setDoc(doc(db, 'profiles', user.uid), formData);
+      alert("Profile saved successfully.");
+      onComplete();
+    } catch (error) {
+      console.error("Error saving profile:", error.message);
+      alert("Failed to save profile.");
+    }
   };
 
   return (
@@ -51,9 +74,9 @@ const StudentProfileForm = ({ onComplete }) => {
             <input
               id={key}
               name={key}
-              placeholder={`Enter your ${key.replace(/([A-Z])/g, ' ').toLowerCase()}`}
               value={formData[key]}
               onChange={handleChange}
+              placeholder={`Enter ${key.replace(/([A-Z])/g, ' ').toLowerCase()}`}
               className="form-input"
               required
             />
