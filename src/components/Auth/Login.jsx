@@ -1,75 +1,94 @@
 import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../firebase/config";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
+} from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const Login = () => {
-  const [identifier, setIdentifier] = useState(""); // email or roll number
-  const [password, setPassword] = useState("");     // for coordinator only
+  const [emailOrRoll, setEmailOrRoll] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Simple email check
-    const isEmail = identifier.includes("@");
+    let email = emailOrRoll;
+    let role = "";
+
+    // Auto-detect student if just a roll number is used
+    if (!email.includes("@")) {
+      email = `${email}@student.com`; // Use a dummy domain to create Firebase user
+      role = "student";
+    } else if (email.includes("coordinator")) {
+      role = "coordinator";
+    } else {
+      role = "student";
+    }
 
     try {
-      if (isEmail) {
-        // Coordinator login
-        const userCredential = await signInWithEmailAndPassword(auth, identifier, password);
-        const user = userCredential.user;
-        console.log("Coordinator login successful:", user.email);
-        // Redirect to coordinator dashboard
-      } else {
-        // Student login
-        const roll = identifier;
+      // Try logging in
+      const res = await signInWithEmailAndPassword(auth, email, password);
 
-        const userRef = doc(db, "users", roll); // assumes document ID is roll number
-        const userSnap = await getDoc(userRef);
+      // Check if user exists in users collection
+      const userDoc = await getDoc(doc(db, "users", res.user.uid));
+      if (!userDoc.exists()) {
+        // New user, save to Firestore
+        await setDoc(doc(db, "users", res.user.uid), {
+          email: emailOrRoll,
+          role,
+        });
 
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-
-          if (userData.roll === roll && userData.password === roll) {
-            console.log("Student login successful:", roll);
-            // Redirect to student dashboard
-          } else {
-            setError("Invalid credentials for student.");
-          }
-        } else {
-          setError("Student record not found.");
-        }
+        await setDoc(doc(db, "roles", res.user.uid), {
+          role,
+        });
       }
-    } catch (err) {
-      console.error("Login error:", err.message);
-      setError("Login failed. Please check your credentials.");
+
+      alert(`Login successful as ${role}`);
+    } catch (loginErr) {
+      // If login fails, try creating a new account
+      try {
+        const res = await createUserWithEmailAndPassword(auth, email, password);
+
+        await setDoc(doc(db, "users", res.user.uid), {
+          email: emailOrRoll,
+          role,
+        });
+
+        await setDoc(doc(db, "roles", res.user.uid), {
+          role,
+        });
+
+        alert(`New user created and logged in as ${role}`);
+      } catch (createErr) {
+        console.error("Login failed:", createErr.message);
+        setError("❌ Login failed. Please check your credentials.");
+      }
     }
   };
 
   return (
-    <form onSubmit={handleLogin}>
+    <div style={{ textAlign: "center" }}>
       <h2>Login</h2>
-      <input
-        type="text"
-        placeholder="Email (coordinator) or Roll No (student)"
-        value={identifier}
-        onChange={(e) => setIdentifier(e.target.value)}
-        required
-      />
-      {identifier.includes("@") && (
+      <form onSubmit={handleLogin}>
+        <input
+          type="text"
+          placeholder="Email or Roll Number"
+          value={emailOrRoll}
+          onChange={(e) => setEmailOrRoll(e.target.value)}
+        /><br />
         <input
           type="password"
-          placeholder="Password"
+          placeholder="Password / Roll Number"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      )}
-      <button type="submit">Login</button>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-    </form>
+        /><br />
+        <button type="submit">Login</button>
+      </form>
+      <p style={{ color: "red" }}>{error}</p>
+    </div>
   );
 };
 
