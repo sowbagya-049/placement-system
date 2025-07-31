@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";  // ✅ Add this
 import { auth, db } from "../../firebase/config";
 import {
   signInWithEmailAndPassword,
@@ -10,6 +11,7 @@ const Login = () => {
   const [emailOrRoll, setEmailOrRoll] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();  // ✅ Initialize
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -18,9 +20,8 @@ const Login = () => {
     let email = emailOrRoll;
     let role = "";
 
-    // Auto-detect student if just a roll number is used
     if (!email.includes("@")) {
-      email = `${email}@student.com`; // Use a dummy domain to create Firebase user
+      email = `${email}@student.com`;
       role = "student";
     } else if (email.includes("coordinator")) {
       role = "coordinator";
@@ -29,13 +30,10 @@ const Login = () => {
     }
 
     try {
-      // Try logging in
       const res = await signInWithEmailAndPassword(auth, email, password);
 
-      // Check if user exists in users collection
       const userDoc = await getDoc(doc(db, "users", res.user.uid));
       if (!userDoc.exists()) {
-        // New user, save to Firestore
         await setDoc(doc(db, "users", res.user.uid), {
           email: emailOrRoll,
           role,
@@ -47,8 +45,15 @@ const Login = () => {
       }
 
       alert(`Login successful as ${role}`);
+      
+      // ✅ Redirect to appropriate dashboard
+      if (role === "coordinator") {
+        navigate("/coordinator");
+      } else {
+        navigate("/student");
+      }
+
     } catch (loginErr) {
-      // If login fails, try creating a new account
       try {
         const res = await createUserWithEmailAndPassword(auth, email, password);
 
@@ -62,6 +67,13 @@ const Login = () => {
         });
 
         alert(`New user created and logged in as ${role}`);
+
+        if (role === "coordinator") {
+          navigate("/coordinator-dashboard");
+        } else {
+          navigate("/student-dashboard");
+        }
+
       } catch (createErr) {
         console.error("Login failed:", createErr.message);
         setError("❌ Login failed. Please check your credentials.");
