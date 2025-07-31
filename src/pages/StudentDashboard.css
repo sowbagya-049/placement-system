@@ -1,0 +1,66 @@
+.student-dashboard {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f4f4f4;
+  min-height: 100vh;
+}
+
+.student-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1e1e1e;
+  color: white;
+  padding: 20px 40px;
+  flex-wrap: wrap;
+}
+
+.student-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.student-nav {
+  display: flex;
+  gap: 20px;
+}
+
+.student-nav button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.student-nav button:hover,
+.student-nav button.active {
+  border-bottom: 2px solid #00bcd4;
+}
+
+.student-nav button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.student-main {
+  padding: 30px 40px;
+}
+
+.logout-btn {
+  background-color: transparent;
+  color: #f44336;
+  border: 1px solid #f44336;
+  padding: 6px 12px;
+  border-radius: 5px;
+  margin-left: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background-color: #f44336;
+  color: white;
+}
