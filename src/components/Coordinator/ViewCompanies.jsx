@@ -14,7 +14,21 @@ import './ViewCompanies.css';
 const ViewCompanies = () => {
   const [companies, setCompanies] = useState([]);
   const [editId, setEditId] = useState(null);
-  const [editData, setEditData] = useState({ name: '', minCgpa: '', maxArrears: '' });
+  const [editData, setEditData] = useState({
+    name: '',
+    about: '',
+    website: '',
+    designation: '',
+    ctc: '',
+    bond: 'No',
+    block: 'No',
+    location: '',
+    jobType: 'Non-Dream',
+    openingFor: '',
+    maxCgpa: '',
+    minArrears: '',
+    rounds: ''
+  });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -60,20 +74,54 @@ const ViewCompanies = () => {
   };
 
   const saveEdit = async () => {
-    if (!editData.name || !editData.minCgpa || !editData.maxArrears) {
-      setError('Please fill in all fields.');
+    const {
+      name, about, website, designation, ctc,
+      bond, block, location, jobType,
+      openingFor, maxCgpa, minArrears, rounds
+    } = editData;
+
+    if (!name || !designation || !maxCgpa || !minArrears || !rounds) {
+      setError('Please fill in all required fields.');
       return;
     }
 
     try {
       await updateDoc(doc(db, 'companies', editId), {
-        ...editData,
-        minCgpa: parseFloat(editData.minCgpa),
-        maxArrears: parseInt(editData.maxArrears)
+        name: name.trim(),
+        about: about.trim(),
+        website: website.trim(),
+        designation: designation.trim(),
+        ctc: ctc.trim(),
+        bond,
+        block,
+        location: location.trim(),
+        jobType,
+        openingFor: openingFor.trim(),
+        eligibility: {
+          maxCgpa: parseFloat(maxCgpa),
+          minArrears: parseInt(minArrears)
+        },
+        rounds: parseInt(rounds)
       });
+
       await logAction('edited_company', { id: editId, ...editData });
       setEditId(null);
-      setEditData({ name: '', minCgpa: '', maxArrears: '' });
+      setEditData({
+        name: '',
+        about: '',
+        website: '',
+        designation: '',
+        ctc: '',
+        bond: 'No',
+        block: 'No',
+        location: '',
+        jobType: 'Non-Dream',
+        openingFor: '',
+        maxCgpa: '',
+        minArrears: '',
+        rounds: ''
+      });
+
       setMessage('Company updated successfully!');
       setError('');
       fetchCompanies();
@@ -88,8 +136,18 @@ const ViewCompanies = () => {
     setEditId(company.id);
     setEditData({
       name: company.name || '',
-      minCgpa: company.minCgpa?.toString() || '',
-      maxArrears: company.maxArrears?.toString() || ''
+      about: company.about || '',
+      website: company.website || '',
+      designation: company.designation || '',
+      ctc: company.ctc || '',
+      bond: company.bond || 'No',
+      block: company.block || 'No',
+      location: company.location || '',
+      jobType: company.jobType || 'Non-Dream',
+      openingFor: company.openingFor || '',
+      maxCgpa: company.eligibility?.maxCgpa?.toString() || '',
+      minArrears: company.eligibility?.minArrears?.toString() || '',
+      rounds: company.rounds?.toString() || ''
     });
   };
 
@@ -109,7 +167,7 @@ const ViewCompanies = () => {
 
   return (
     <div className="view-companies-container">
-      <h2>Company List</h2>
+      <h2 style={{ color: 'black' }}>Company List</h2>
 
       {message && (
         <div className="success-message">
@@ -128,31 +186,40 @@ const ViewCompanies = () => {
         <div key={company.id} className="company-card">
           {editId === company.id ? (
             <div className="edit-form">
-              <input
-                type="text"
-                value={editData.name}
-                onChange={e => setEditData({ ...editData, name: e.target.value })}
-                placeholder="Company Name"
-              />
-              <input
-                type="number"
-                value={editData.minCgpa}
-                onChange={e => setEditData({ ...editData, minCgpa: e.target.value })}
-                placeholder="Min CGPA"
-              />
-              <input
-                type="number"
-                value={editData.maxArrears}
-                onChange={e => setEditData({ ...editData, maxArrears: e.target.value })}
-                placeholder="Max Arrears"
-              />
+              <input type="text" placeholder="Company Name" value={editData.name} onChange={e => setEditData({ ...editData, name: e.target.value })} />
+              <textarea placeholder="About" value={editData.about} onChange={e => setEditData({ ...editData, about: e.target.value })} />
+              <input type="url" placeholder="Website" value={editData.website} onChange={e => setEditData({ ...editData, website: e.target.value })} />
+              <input type="text" placeholder="Designation" value={editData.designation} onChange={e => setEditData({ ...editData, designation: e.target.value })} />
+              <input type="text" placeholder="CTC" value={editData.ctc} onChange={e => setEditData({ ...editData, ctc: e.target.value })} />
+              <label>Bond</label>
+              <select value={editData.bond} onChange={e => setEditData({ ...editData, bond: e.target.value })}>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+              <label>Block</label>
+              <select value={editData.block} onChange={e => setEditData({ ...editData, block: e.target.value })}>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+              <input type="text" placeholder="Location" value={editData.location} onChange={e => setEditData({ ...editData, location: e.target.value })} />
+              <label>Job Type</label>
+              <select value={editData.jobType} onChange={e => setEditData({ ...editData, jobType: e.target.value })}>
+                <option value="Zero">Zero</option>
+                <option value="Dream">Dream</option>
+                <option value="Non-Dream">Non-Dream</option>
+              </select>
+              <input type="text" placeholder="Opening For" value={editData.openingFor} onChange={e => setEditData({ ...editData, openingFor: e.target.value })} />
+              <input type="number" placeholder="Max CGPA" value={editData.maxCgpa} onChange={e => setEditData({ ...editData, maxCgpa: e.target.value })} />
+              <input type="number" placeholder="Min Arrears" value={editData.minArrears} onChange={e => setEditData({ ...editData, minArrears: e.target.value })} />
+              <input type="number" placeholder="No. of Rounds" value={editData.rounds} onChange={e => setEditData({ ...editData, rounds: e.target.value })} />
               <button className="save-btn" onClick={saveEdit}>Save</button>
             </div>
           ) : (
             <>
               <h4>{company.name}</h4>
-              <p>Min CGPA: {company.minCgpa}</p>
-              <p>Max Arrears: {company.maxArrears}</p>
+              <p>Min CGPA: {company.eligibility?.maxCgpa}</p>
+              <p>Max Arrears: {company.eligibility?.minArrears}</p>
+              <p>Job: {company.designation}</p>
               <div className="btn-group">
                 <button className="delete-btn" onClick={() => deleteCompany(company.id)}>Delete</button>
                 <button className="edit-btn" onClick={() => startEdit(company)}>Edit</button>

@@ -1,38 +1,96 @@
 .add-company-form {
-  background: #0a3d5f;
-  padding: 30px;
-  max-width: 500px;
-  margin: 40px auto;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  padding: 40px;
+  max-width: 600px;
+  margin: 50px auto;
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(10, 61, 95, 0.15);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .add-company-form h2 {
   text-align: center;
-  margin-bottom: 25px;
+  margin-bottom: 30px;
+  color: #0a3d5f;
+  font-size: 26px;
 }
 
-.add-company-form input {
+.add-company-form input,
+.add-company-form textarea,
+.add-company-form select {
   width: 100%;
-  padding: 12px;
-  margin: 10px 0;
+  padding: 14px;
+  margin: 10px 0 20px;
   border: 1px solid #ccc;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 16px;
+  box-sizing: border-box;
+  transition: border 0.3s ease;
+}
+
+.add-company-form input:focus,
+.add-company-form textarea:focus,
+.add-company-form select:focus {
+  border-color: #1976d2;
+  outline: none;
+}
+
+.add-company-form textarea {
+  height: 100px;
+  resize: vertical;
 }
 
 .add-company-form button {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   background-color: #1976d2;
   color: white;
-  font-size: 16px;
+  font-size: 17px;
+  font-weight: bold;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.3s ease;
 }
 
 .add-company-form button:hover {
   background-color: #125ea3;
+}
+
+.form-message {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.form-message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.form-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .add-company-form {
+    padding: 25px;
+  }
+
+  .add-company-form h2 {
+    font-size: 22px;
+  }
+
+  .add-company-form input,
+  .add-company-form textarea,
+  .add-company-form select,
+  .add-company-form button {
+    font-size: 15px;
+  }
 }
